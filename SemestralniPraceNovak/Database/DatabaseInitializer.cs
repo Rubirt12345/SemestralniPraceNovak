@@ -10,10 +10,10 @@ namespace SemestralniPraceNovak.Database
 		{
 			using (var context = new AppDbContext())
 			{
-                // Vytvoø databázi a aplikuj migrace
+                
                 await context.Database.EnsureCreatedAsync();
 
-                // Seed data - základní sporty
+               
                 if (!await context.Sports.AnyAsync())
 				{
 					context.Sports.AddRange(

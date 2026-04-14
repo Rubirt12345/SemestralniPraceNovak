@@ -249,37 +249,43 @@ namespace SemestralniPraceNovak.ViewModels
                 ErrorMessage = $"Chyba: {ex.Message}";
             }
         }
-
         [RelayCommand]
-        public async Task DrawMatchesAsync()
+        public async Task DrawMatchesAsync(Round round) 
         {
-            if (SelectedRound == null)
+            
+            var targetRound = round ?? SelectedRound;
+
+            if (targetRound == null)
             {
-                ErrorMessage = "Vyberte kolo";
+                ErrorMessage = "Vyberte kolo pro losování.";
                 return;
             }
 
             try
             {
-                var context = new AppDbContext();
-                var round = await context.Rounds
-                    .Include(r => r.Tournament)
-                    .FirstOrDefaultAsync(r => r.Id == SelectedRound.Id);
+                IsLoading = true;
+                SelectedRound = targetRound; 
 
-                if (round.Tournament.Participants.Any(p => p.PlayerId.HasValue))
+              
+                if (SelectedTournament.Participants.Any(p => p.PlayerId.HasValue))
                 {
-                    await _matchService.DrawPlayersMatchesAsync(SelectedRound.Id);
+                    await _matchService.DrawPlayersMatchesAsync(targetRound.Id);
                 }
                 else
                 {
-                    await _matchService.DrawTeamsMatchesAsync(SelectedRound.Id);
+                    await _matchService.DrawTeamsMatchesAsync(targetRound.Id);
                 }
 
-                await LoadRoundMatchesAsync(SelectedRound);
+          
+                await LoadRoundMatchesAsync(targetRound);
             }
             catch (Exception ex)
             {
                 ErrorMessage = $"Chyba pøi losování: {ex.Message}";
+            }
+            finally
+            {
+                IsLoading = false;
             }
         }
     }

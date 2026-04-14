@@ -3,6 +3,7 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:vm="using:SemestralniPraceNovak.ViewModels"
+        xmlns:models="using:SemestralniPraceNovak.Models"
         mc:Ignorable="d"
         d:DesignWidth="1200" d:DesignHeight="700"
         x:Class="SemestralniPraceNovak.MainWindow"
@@ -11,210 +12,217 @@
         Width="1200"
         Height="700">
 
-    <Grid ColumnDefinitions="200,*">
-        <Border Grid.Column="0" Background="#F0F0F0" Padding="12">
-            <StackPanel Spacing="6"> 
-                <TextBlock Text="Menu" FontSize="18" FontWeight="Bold" Margin="0,0,0,12"/>
+	<Grid ColumnDefinitions="200,*">
+		<Border Grid.Column="0" Background="#F0F0F0" Padding="12">
+			<StackPanel Spacing="6">
+				<TextBlock Text="Menu" FontSize="18" FontWeight="Bold" Margin="0,0,0,12"/>
+				<Button Content="📊 Dashboard" Command="{Binding ShowDashboardCommand}" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" Padding="10" Background="#007ACC" Foreground="White"/>
+				<Button Content="🏆 Turnaje" Command="{Binding ShowTournamentsViewCommand}" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" Padding="10" Background="#007ACC" Foreground="White"/>
+				<Button Content="👤 Hráči" Command="{Binding ShowPlayersViewCommand}" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" Padding="10" Background="#007ACC" Foreground="White"/>
+				<Button Content="👥 Týmy" Command="{Binding ShowTeamsViewCommand}" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" Padding="10" Background="#007ACC" Foreground="White"/>
+			</StackPanel>
+		</Border>
 
-                <Button Content="📊 Dashboard"
-                        Command="{Binding ShowDashboardCommand}"
-                        HorizontalAlignment="Stretch"
-                        HorizontalContentAlignment="Center"
-                        Padding="10"
-                        Background="#007ACC"
-                        Foreground="White"/>
+		<Grid Grid.Column="1" Margin="16">
+			<TextBlock IsVisible="{Binding IsDashboardVisible}" Text="Vítejte v Organizátoru Turnajů!" FontSize="32" FontWeight="Bold" VerticalAlignment="Center" HorizontalAlignment="Center"/>
 
-                <Button Content="🏆 Turnaje"
-                        Command="{Binding ShowTournamentsViewCommand}"
-                        HorizontalAlignment="Stretch"
-                        HorizontalContentAlignment="Center"
-                        Padding="10"
-                        Background="#007ACC"
-                        Foreground="White"/>
+			<Grid Name="TournamentsView" IsVisible="{Binding IsTournamentsVisible}" ColumnDefinitions="300, *">
+				<Border Grid.Column="0" Background="#F5F5F5" Padding="12" Margin="0,0,12,0" CornerRadius="4">
+					<StackPanel Spacing="8">
+						<TextBlock Text="Nový Turnaj" FontSize="16" FontWeight="Bold"/>
+						<TextBox PlaceholderText="Název turnaje" Text="{Binding TournamentViewModel.NewTournamentName}"/>
+						<ComboBox ItemsSource="{Binding TournamentViewModel.Sports}" SelectedItem="{Binding TournamentViewModel.SelectedSport}" HorizontalAlignment="Stretch">
+							<ComboBox.ItemTemplate>
+								<DataTemplate x:DataType="models:Sport">
+									<TextBlock Text="{Binding Name}" />
+								</DataTemplate>
+							</ComboBox.ItemTemplate>
+						</ComboBox>
+						<Button Content="Vytvořit Turnaj" Command="{Binding TournamentViewModel.CreateTournamentCommand}" Background="#28A745" Foreground="White" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" Padding="8"/>
+						<Separator Margin="0,5"/>
+						<TextBlock Text="Turnaje" FontSize="14" FontWeight="Bold"/>
+						<ListBox ItemsSource="{Binding TournamentViewModel.Tournaments}" SelectedItem="{Binding TournamentViewModel.SelectedTournament}" Height="240">
+							<ListBox.ItemTemplate>
+								<DataTemplate x:DataType="models:Tournament">
+									<StackPanel Margin="5">
+										<TextBlock Text="{Binding Name}" FontWeight="Bold"/>
+										<TextBlock Text="{Binding Sport.Name}" FontSize="11" Foreground="Gray"/>
+									</StackPanel>
+								</DataTemplate>
+							</ListBox.ItemTemplate>
+						</ListBox>
+						<Button Content="Smazat Turnaj" Command="{Binding TournamentViewModel.DeleteTournamentCommand}" CommandParameter="{Binding TournamentViewModel.SelectedTournament}" Background="#DC3545" Foreground="White" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" Padding="8"/>
+					</StackPanel>
+				</Border>
 
-                <Button Content="👤 Hráči"
-                        Command="{Binding ShowPlayersViewCommand}"
-                        HorizontalAlignment="Stretch"
-                        HorizontalContentAlignment="Center"
-                        Padding="10"
-                        Background="#007ACC"
-                        Foreground="White"/>
+				<StackPanel Grid.Column="1" IsVisible="{Binding TournamentViewModel.SelectedTournament, Converter={x:Static ObjectConverters.IsNotNull}}" Spacing="10">
+					<TextBlock Text="{Binding TournamentViewModel.SelectedTournament.Name, StringFormat='Turnaj: {0}'}" FontSize="20" FontWeight="Bold"/>
+					<Border Background="#F9F9F9" Padding="12" CornerRadius="4">
+						<StackPanel Spacing="10">
+							<StackPanel>
+								<TextBlock Text="Stav:" FontWeight="Bold" />
+								<TextBlock Text="{Binding TournamentViewModel.SelectedTournament.Status}" />
+							</StackPanel>
+							<StackPanel>
+								<TextBlock Text="Sport:" FontWeight="Bold" />
+								<TextBlock Text="{Binding TournamentViewModel.SelectedTournament.Sport.Name}" />
+							</StackPanel>
+							<TextBlock Text="Účastníci (Týmy)" FontWeight="Bold" Margin="0,10,0,0"/>
+							<Border Background="#E8E8E8" Padding="10" CornerRadius="4">
+								<StackPanel Spacing="5">
+									<Grid ColumnDefinitions="*, Auto">
+										<ComboBox ItemsSource="{Binding TournamentViewModel.AvailableTeams}" SelectedItem="{Binding TournamentViewModel.SelectedAvailableTeam}" PlaceholderText="Vyberte tým" HorizontalAlignment="Stretch">
+											<ComboBox.ItemTemplate>
+												<DataTemplate x:DataType="models:Team">
+													<TextBlock Text="{Binding Name}" />
+												</DataTemplate>
+											</ComboBox.ItemTemplate>
+										</ComboBox>
+										<Button Grid.Column="1" Content="Přidat" Command="{Binding TournamentViewModel.AddTeamToParticipantCommand}" Margin="5,0,0,0" Background="#28A745" Foreground="White"/>
+									</Grid>
+									<ListBox ItemsSource="{Binding TournamentViewModel.Standings}" Height="100">
+										<ListBox.ItemTemplate>
+											<DataTemplate x:DataType="models:TournamentParticipant">
+												<TextBlock Text="{Binding Team.Name}" />
+											</DataTemplate>
+										</ListBox.ItemTemplate>
+									</ListBox>
+								</StackPanel>
+							</Border>
+							<Button Content="Přidat Kolo" Command="{Binding TournamentViewModel.CreateRoundCommand}" Background="#007ACC" Foreground="White" Padding="8"/>
+							<ListBox ItemsSource="{Binding TournamentViewModel.Rounds}" Height="120" SelectedItem="{Binding TournamentViewModel.SelectedRound}">
+								<ListBox.ItemTemplate>
+									<DataTemplate x:DataType="models:Round">
+										<Border Background="#E8E8E8" Margin="0,2" Padding="8" CornerRadius="4">
+											<StackPanel Orientation="Horizontal" Spacing="20">
+												<TextBlock Text="{Binding Name}" FontWeight="Bold" VerticalAlignment="Center" />
+												<Button Content="Losovat" Command="{Binding $parent[Window].((vm:MainWindowViewModel)DataContext).TournamentViewModel.DrawMatchesCommand}" CommandParameter="{Binding}" Background="#FFC107"/>
+											</StackPanel>
+										</Border>
+									</DataTemplate>
+								</ListBox.ItemTemplate>
+							</ListBox>
+							<TextBlock Text="Zápasy v kole" FontWeight="Bold"/>
+							<ListBox ItemsSource="{Binding TournamentViewModel.Matches}" Height="150" Background="White">
+								<ListBox.ItemTemplate>
+									<DataTemplate x:DataType="models:Match">
+										<Border Padding="5" BorderBrush="#F0F0F0" BorderThickness="0,0,0,1">
+											<Grid ColumnDefinitions="*, 30, *">
+												<TextBlock Grid.Column="0" Text="{Binding Team1.Name}" HorizontalAlignment="Right" FontWeight="SemiBold"/>
+												<TextBlock Grid.Column="1" Text=" : " HorizontalAlignment="Center" Foreground="Gray"/>
+												<TextBlock Grid.Column="2" Text="{Binding Team2.Name}" HorizontalAlignment="Left" FontWeight="SemiBold"/>
+											</Grid>
+										</Border>
+									</DataTemplate>
+								</ListBox.ItemTemplate>
+							</ListBox>
+						</StackPanel>
+					</Border>
+				</StackPanel>
+			</Grid>
 
-                <Button Content="👥 Týmy"
-                        Command="{Binding ShowTeamsViewCommand}"
-                        HorizontalAlignment="Stretch"
-                        HorizontalContentAlignment="Center"
-                        Padding="10"
-                        Background="#007ACC"
-                        Foreground="White"/>
-            </StackPanel>
-        </Border>
+			<Grid Name="PlayersView" IsVisible="{Binding IsPlayersVisible}" ColumnDefinitions="300, *">
+				<Border Grid.Column="0" Background="#F5F5F5" Padding="12" Margin="0,0,12,0" CornerRadius="4">
+					<StackPanel Spacing="8">
+						<TextBlock Text="Nový Hráč" FontSize="16" FontWeight="Bold"/>
+						<TextBox PlaceholderText="Jméno hráče" Text="{Binding PlayerViewModel.NewPlayerName}"/>
+						<Button Content="Vytvořit Hráče" Command="{Binding PlayerViewModel.CreatePlayerCommand}" Background="#28A745" Foreground="White" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" Padding="8"/>
+						<Separator Margin="0,5"/>
+						<TextBlock Text="Seznam Hráčů" FontSize="14" FontWeight="Bold"/>
+						<ListBox ItemsSource="{Binding PlayerViewModel.Players}" SelectedItem="{Binding PlayerViewModel.SelectedPlayer}" Height="350">
+							<ListBox.ItemTemplate>
+								<DataTemplate x:DataType="models:Player">
+									<TextBlock Text="{Binding Name}" Padding="2"/>
+								</DataTemplate>
+							</ListBox.ItemTemplate>
+						</ListBox>
+						<Button Content="Smazat Hráče" Command="{Binding PlayerViewModel.DeletePlayerCommand}" CommandParameter="{Binding PlayerViewModel.SelectedPlayer}" Background="#DC3545" Foreground="White" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" Padding="8"/>
+					</StackPanel>
+				</Border>
 
-        <Grid Grid.Column="1" Margin="16">
-            
-            <TextBlock Name="DashboardView"
-                       IsVisible="{Binding IsDashboardVisible}"
-                       Text="Vítejte v Organizátoru Turnajů!"
-                       FontSize="32"
-                       FontWeight="Bold"
-                       VerticalAlignment="Center"
-                       HorizontalAlignment="Center"/>
+				<StackPanel Grid.Column="1" Margin="20" IsVisible="{Binding PlayerViewModel.SelectedPlayer, Converter={x:Static ObjectConverters.IsNotNull}}" Spacing="10">
+					<TextBlock Text="{Binding PlayerViewModel.SelectedPlayer.Name}" FontSize="32" FontWeight="Bold" Foreground="#007ACC"/>
+					<TextBlock Text="{Binding PlayerViewModel.PlayerTeamName, StringFormat='Tým: {0}'}" FontSize="18" Foreground="Gray"/>
+					<Grid ColumnDefinitions="*, *, *" Margin="0,20,0,0">
+						<Border Grid.Column="0" Background="#F0F0F0" Margin="5" Padding="15" CornerRadius="8">
+							<StackPanel HorizontalAlignment="Center">
+								<TextBlock Text="Odehráno" FontSize="12"/>
+								<TextBlock Text="{Binding PlayerViewModel.MatchesPlayed}" FontSize="28" FontWeight="Bold"/>
+							</StackPanel>
+						</Border>
+						<Border Grid.Column="1" Background="#E8F5E9" Margin="5" Padding="15" CornerRadius="8">
+							<StackPanel HorizontalAlignment="Center">
+								<TextBlock Text="Výhry" FontSize="12" Foreground="#2E7D32"/>
+								<TextBlock Text="{Binding PlayerViewModel.TotalWins}" FontSize="28" FontWeight="Bold" Foreground="#2E7D32"/>
+							</StackPanel>
+						</Border>
+						<Border Grid.Column="2" Background="#FFF3E0" Margin="5" Padding="15" CornerRadius="8">
+							<StackPanel HorizontalAlignment="Center">
+								<TextBlock Text="Úspěšnost" FontSize="12" Foreground="#E65100"/>
+								<TextBlock Text="{Binding PlayerViewModel.WinRate}" FontSize="28" FontWeight="Bold" Foreground="#E65100"/>
+							</StackPanel>
+						</Border>
+					</Grid>
+				</StackPanel>
+			</Grid>
 
-            <Grid Name="TournamentsView" IsVisible="{Binding IsTournamentsVisible}">
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="300" />
-                    <ColumnDefinition Width="*" />
-                </Grid.ColumnDefinitions>
+			<Grid Name="TeamsView" IsVisible="{Binding IsTeamsVisible}" ColumnDefinitions="300, *">
+				<Border Grid.Column="0" Background="#F5F5F5" Padding="12" Margin="0,0,12,0" CornerRadius="4">
+					<StackPanel Spacing="8">
+						<TextBlock Text="Nový Tým" FontSize="16" FontWeight="Bold"/>
+						<TextBox PlaceholderText="Název týmu" Text="{Binding PlayerViewModel.NewTeamName}"/>
+						<Button Content="Vytvořit Tým" Command="{Binding PlayerViewModel.CreateTeamCommand}" Background="#28A745" Foreground="White" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" Padding="8"/>
+						<Separator Margin="0,5"/>
+						<TextBlock Text="Seznam Týmů" FontSize="14" FontWeight="Bold"/>
+						<ListBox ItemsSource="{Binding PlayerViewModel.Teams}" SelectedItem="{Binding PlayerViewModel.SelectedTeam}" Height="350">
+							<ListBox.ItemTemplate>
+								<DataTemplate x:DataType="models:Team">
+									<TextBlock Text="{Binding Name}" Padding="2"/>
+								</DataTemplate>
+							</ListBox.ItemTemplate>
+						</ListBox>
+						<Button Content="Smazat Tým" Command="{Binding PlayerViewModel.DeleteTeamCommand}" CommandParameter="{Binding PlayerViewModel.SelectedTeam}" Background="#DC3545" Foreground="White" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" Padding="8"/>
+					</StackPanel>
+				</Border>
 
-                <Border Grid.Column="0" Background="#F5F5F5" Padding="12" Margin="0,0,12,0" CornerRadius="4">
-                    <StackPanel Spacing="8">
-                        <TextBlock Text="Nový Turnaj" FontSize="16" FontWeight="Bold"/>
-                        <TextBox Watermark="Název turnaje" Text="{Binding TournamentViewModel.NewTournamentName}"/>
-                        <ComboBox ItemsSource="{Binding TournamentViewModel.Sports}"
-                                  SelectedItem="{Binding TournamentViewModel.SelectedSport}"
-                                  HorizontalAlignment="Stretch">
-                            <ComboBox.ItemTemplate>
-                                <DataTemplate>
-                                    <TextBlock Text="{Binding Name}" />
-                                </DataTemplate>
-                            </ComboBox.ItemTemplate>
-                        </ComboBox>
-                        <Button Content="Vytvořit Turnaj"
-                                Command="{Binding TournamentViewModel.CreateTournamentCommand}"
-                                Background="#28A745" Foreground="White" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" Padding="8"/>
-                        <Separator Margin="0,5"/>
-                        <TextBlock Text="Turnaje" FontSize="14" FontWeight="Bold"/>
-                        <ListBox ItemsSource="{Binding TournamentViewModel.Tournaments}"
-                                 SelectedItem="{Binding TournamentViewModel.SelectedTournament}"
-                                 Height="240">
-                            <ListBox.ItemTemplate>
-                                <DataTemplate>
-                                    <StackPanel Margin="5">
-                                        <TextBlock Text="{Binding Name}" FontWeight="Bold"/>
-                                        <TextBlock Text="{Binding Sport.Name}" FontSize="11" Foreground="Gray"/>
-                                    </StackPanel>
-                                </DataTemplate>
-                            </ListBox.ItemTemplate>
-                        </ListBox>
-                        <Button Content="Smazat Turnaj"
-                                Command="{Binding TournamentViewModel.DeleteTournamentCommand}"
-                                CommandParameter="{Binding TournamentViewModel.SelectedTournament}"
-                                Background="#DC3545" Foreground="White" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" Padding="8"/>
-                    </StackPanel>
-                </Border>
+				<StackPanel Grid.Column="1" IsVisible="{Binding PlayerViewModel.SelectedTeam, Converter={x:Static ObjectConverters.IsNotNull}}" Margin="20" Spacing="20">
+					<TextBlock Text="{Binding PlayerViewModel.SelectedTeam.Name, StringFormat='Správa týmu: {0}'}" FontSize="28" FontWeight="Bold" Foreground="#007ACC"/>
 
-                <StackPanel Grid.Column="1" IsVisible="{Binding TournamentViewModel.SelectedTournament, Converter={x:Static ObjectConverters.IsNotNull}}">
-                    <TextBlock Text="{Binding TournamentViewModel.SelectedTournament.Name, StringFormat='Turnaj: {0}'}" FontSize="20" FontWeight="Bold" Margin="0,0,0,8"/>
-                    <Border Background="#F9F9F9" Padding="12" CornerRadius="4">
-                        <StackPanel Spacing="10">
-                            <StackPanel><TextBlock Text="Stav:" FontWeight="Bold" /><TextBlock Text="{Binding TournamentViewModel.SelectedTournament.Status}" /></StackPanel>
-                            <StackPanel><TextBlock Text="Sport:" FontWeight="Bold" /><TextBlock Text="{Binding TournamentViewModel.SelectedTournament.Sport.Name}" /></StackPanel>
-                            
-                            <TextBlock Text="Účastníci (Týmy)" FontWeight="Bold" Margin="0,10,0,0"/>
-                            <Border Background="#E8E8E8" Padding="10" CornerRadius="4">
-                                <StackPanel Spacing="5">
-                                    <Grid ColumnDefinitions="*, Auto">
-                                        <ComboBox ItemsSource="{Binding TournamentViewModel.AvailableTeams}"
-                                                  SelectedItem="{Binding TournamentViewModel.SelectedAvailableTeam}"
-                                                  PlaceholderText="Vyberte tým k přidání"
-                                                  HorizontalAlignment="Stretch">
-                                            <ComboBox.ItemTemplate>
-                                                <DataTemplate>
-                                                    <TextBlock Text="{Binding Name}" />
-                                                </DataTemplate>
-                                            </ComboBox.ItemTemplate>
-                                        </ComboBox>
-                                        <Button Grid.Column="1" 
-                                                Content="Přidat" 
-                                                Command="{Binding TournamentViewModel.AddTeamToParticipantCommand}"
-                                                Margin="5,0,0,0"
-                                                Background="#28A745" Foreground="White"/>
-                                    </Grid>
+					<Border Background="#F9F9F9" Padding="15" CornerRadius="8" BorderBrush="#DDD" BorderThickness="1">
+						<StackPanel Spacing="10">
+							<TextBlock Text="Přidat hráče do tohoto týmu" FontWeight="Bold"/>
+							<Grid ColumnDefinitions="*, Auto">
+								<ComboBox ItemsSource="{Binding PlayerViewModel.Players}"
+                                          SelectedItem="{Binding PlayerViewModel.SelectedPlayerToAdd}"
+                                          PlaceholderText="Vyberte hráče ze seznamu"
+                                          HorizontalAlignment="Stretch">
+									<ComboBox.ItemTemplate>
+										<DataTemplate x:DataType="models:Player">
+											<TextBlock Text="{Binding Name}" />
+										</DataTemplate>
+									</ComboBox.ItemTemplate>
+								</ComboBox>
+								<Button Grid.Column="1" Content="Přidat"
+                                        Command="{Binding PlayerViewModel.AddPlayerToTeamCommand}"
+                                        Margin="10,0,0,0" Background="#28A745" Foreground="White" Padding="10,5"/>
+							</Grid>
+						</StackPanel>
+					</Border>
 
-                                    <ListBox ItemsSource="{Binding TournamentViewModel.Standings}" Height="120" Margin="0,5,0,0">
-                                        <ListBox.ItemTemplate>
-                                            <DataTemplate>
-                                                <TextBlock Text="{Binding Team.Name}" Padding="2"/>
-                                            </DataTemplate>
-                                        </ListBox.ItemTemplate>
-                                    </ListBox>
-                                </StackPanel>
-                            </Border>
-                            <Button Content="Přidat Kolo" Command="{Binding TournamentViewModel.CreateRoundCommand}" Background="#007ACC" Foreground="White" Padding="8"/>
-                            
-                            <TextBlock Text="Kola" FontWeight="Bold" Margin="0,10,0,0"/>
-                            <ListBox ItemsSource="{Binding TournamentViewModel.Rounds}" Height="150">
-                                <ListBox.ItemTemplate>
-                                    <DataTemplate>
-                                        <Border Background="#E8E8E8" Margin="0,2" Padding="8" CornerRadius="4">
-                                            <StackPanel Spacing="5">
-                                                <TextBlock Text="{Binding Name}" FontWeight="Bold" />
-                                                <Button Content="Losovat zápasy" 
-                                                        Command="{Binding $parent[Window].((vm:MainWindowViewModel)DataContext).TournamentViewModel.DrawMatchesCommand}"
-                                                        Background="#FFC107" Padding="5"/>
-                                            </StackPanel>
-                                        </Border>
-                                    </DataTemplate>
-                                </ListBox.ItemTemplate>
-                            </ListBox>
-                        </StackPanel>
-                    </Border>
-                </StackPanel>
-            </Grid>
-
-            <Grid Name="PlayersView" IsVisible="{Binding IsPlayersVisible}">
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="300" />
-                    <ColumnDefinition Width="*" />
-                </Grid.ColumnDefinitions>
-                <Border Grid.Column="0" Background="#F5F5F5" Padding="12" Margin="0,0,12,0" CornerRadius="4">
-                    <StackPanel Spacing="8">
-                        <TextBlock Text="Nový Hráč" FontSize="16" FontWeight="Bold"/>
-                        <TextBox Watermark="Jméno hráče" Text="{Binding PlayerViewModel.NewPlayerName}"/>
-                        <Button Content="Vytvořit Hráče" Command="{Binding PlayerViewModel.CreatePlayerCommand}" Background="#28A745" Foreground="White" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" Padding="8"/>
-                        <Separator Margin="0,5"/>
-                        <TextBlock Text="Seznam Hráčů" FontSize="14" FontWeight="Bold"/>
-                        <ListBox ItemsSource="{Binding PlayerViewModel.Players}" SelectedItem="{Binding PlayerViewModel.SelectedPlayer}" Height="350">
-                            <ListBox.ItemTemplate><DataTemplate><TextBlock Text="{Binding Name}" Padding="2"/></DataTemplate></ListBox.ItemTemplate>
-                        </ListBox>
-                        <Button Content="Smazat Hráče" Command="{Binding PlayerViewModel.DeletePlayerCommand}" CommandParameter="{Binding PlayerViewModel.SelectedPlayer}" Background="#DC3545" Foreground="White" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" Padding="8"/>
-                    </StackPanel>
-                </Border>
-                <StackPanel Grid.Column="1" IsVisible="{Binding PlayerViewModel.SelectedPlayer, Converter={x:Static ObjectConverters.IsNotNull}}">
-                    <TextBlock Text="{Binding PlayerViewModel.SelectedPlayer.Name, StringFormat='Detail hráče: {0}'}" FontSize="24" FontWeight="Bold" Margin="0,0,0,10"/>
-                    <Border Background="#F9F9F9" Padding="15" CornerRadius="8"><TextBlock Text="Zde budou statistiky hráče." FontStyle="Italic" Foreground="Gray"/></Border>
-                </StackPanel>
-            </Grid>
-
-            <Grid Name="TeamsView" IsVisible="{Binding IsTeamsVisible}">
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="300" />
-                    <ColumnDefinition Width="*" />
-                </Grid.ColumnDefinitions>
-                <Border Grid.Column="0" Background="#F5F5F5" Padding="12" Margin="0,0,12,0" CornerRadius="4">
-                    <StackPanel Spacing="8">
-                        <TextBlock Text="Nový Tým" FontSize="16" FontWeight="Bold"/>
-                        <TextBox Watermark="Název týmu" Text="{Binding PlayerViewModel.NewTeamName}"/>
-                        <Button Content="Vytvořit Tým" Command="{Binding PlayerViewModel.CreateTeamCommand}" Background="#28A745" Foreground="White" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" Padding="8"/>
-                        <Separator Margin="0,5"/>
-                        <TextBlock Text="Seznam Týmů" FontSize="14" FontWeight="Bold"/>
-                        <ListBox ItemsSource="{Binding PlayerViewModel.Teams}" SelectedItem="{Binding PlayerViewModel.SelectedTeam}" Height="350">
-                            <ListBox.ItemTemplate><DataTemplate><TextBlock Text="{Binding Name}" Padding="2"/></DataTemplate></ListBox.ItemTemplate>
-                        </ListBox>
-                        <Button Content="Smazat Tým" Command="{Binding PlayerViewModel.DeleteTeamCommand}" CommandParameter="{Binding PlayerViewModel.SelectedTeam}" Background="#DC3545" Foreground="White" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" Padding="8"/>
-                    </StackPanel>
-                </Border>
-                <StackPanel Grid.Column="1" IsVisible="{Binding PlayerViewModel.SelectedTeam, Converter={x:Static ObjectConverters.IsNotNull}}">
-                    <TextBlock Text="{Binding PlayerViewModel.SelectedTeam.Name, StringFormat='Detail týmu: {0}'}" FontSize="24" FontWeight="Bold" Margin="0,0,0,10"/>
-                    <Border Background="#F9F9F9" Padding="15" CornerRadius="8">
-                        <StackPanel Spacing="10">
-                            <TextBlock Text="Členové týmu:" FontWeight="Bold"/>
-                            <TextBlock Text="Seznam členů týmu bude doplněn po propojení v DB." Foreground="Gray"/>
-                        </StackPanel>
-                    </Border>
-                </StackPanel>
-            </Grid>
-            
-        </Grid>
-    </Grid>
+					<StackPanel Spacing="10">
+						<TextBlock Text="Aktuální členové týmu" FontWeight="Bold" FontSize="16"/>
+						<ListBox ItemsSource="{Binding PlayerViewModel.TeamMembers}" Background="White" MinHeight="200" BorderThickness="1" BorderBrush="#EEE">
+							<ListBox.ItemTemplate>
+								<DataTemplate x:DataType="models:Player">
+									<Border Padding="10" BorderBrush="#F0F0F0" BorderThickness="0,0,0,1">
+										<TextBlock Text="{Binding Name}" FontSize="16" VerticalAlignment="Center"/>
+									</Border>
+								</DataTemplate>
+							</ListBox.ItemTemplate>
+						</ListBox>
+					</StackPanel>
+				</StackPanel>
+			</Grid>
+		</Grid>
+	</Grid>
 </Window>
