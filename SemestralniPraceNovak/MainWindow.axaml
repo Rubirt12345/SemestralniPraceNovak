@@ -52,6 +52,47 @@
 							</ListBox.ItemTemplate>
 						</ListBox>
 						<Button Content="Smazat Turnaj" Command="{Binding TournamentViewModel.DeleteTournamentCommand}" CommandParameter="{Binding TournamentViewModel.SelectedTournament}" Background="#DC3545" Foreground="White" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" Padding="8"/>
+
+						<!-- Pavouk pod formulářem Nový Turnaj -->
+						<TextBlock Text="Pavouk" FontWeight="Bold" Margin="0,12,0,6"/>
+						<ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto" Height="200">
+							<Grid Name="Pavouk_Tournaments">
+								<Canvas IsHitTestVisible="False" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
+									<!-- demo spojnice -->
+									<Line StartPoint="20,20" EndPoint="140,60" Stroke="Gray" StrokeThickness="1"/>
+									<Line StartPoint="20,80" EndPoint="140,60" Stroke="Gray" StrokeThickness="1"/>
+								</Canvas>
+
+								<ItemsControl ItemsSource="{Binding TournamentViewModel.SelectedTournament.Rounds}">
+									<ItemsControl.ItemsPanel>
+										<ItemsPanelTemplate>
+											<StackPanel Orientation="Horizontal" Spacing="12"/>
+										</ItemsPanelTemplate>
+									</ItemsControl.ItemsPanel>
+
+									<ItemsControl.ItemTemplate>
+										<DataTemplate>
+											<StackPanel Spacing="8">
+												<TextBlock Text="{Binding Name}" FontWeight="Bold" HorizontalAlignment="Center"/>
+												<ItemsControl ItemsSource="{Binding Matches}">
+													<ItemsControl.ItemTemplate>
+														<DataTemplate>
+															<Border Background="#E8E8E8" Padding="6" CornerRadius="6" Width="120">
+																<StackPanel>
+																	<TextBlock Text="{Binding Participant1.Team.Name, TargetNullValue='---'}" HorizontalAlignment="Center"/>
+																	<TextBlock Text="vs" FontSize="10" HorizontalAlignment="Center" Foreground="Gray"/>
+																	<TextBlock Text="{Binding Participant2.Team.Name, TargetNullValue='---'}" HorizontalAlignment="Center"/>
+																</StackPanel>
+															</Border>
+														</DataTemplate>
+													</ItemsControl.ItemTemplate>
+												</ItemsControl>
+											</StackPanel>
+										</DataTemplate>
+									</ItemsControl.ItemTemplate>
+								</ItemsControl>
+							</Grid>
+						</ScrollViewer>
 					</StackPanel>
 				</Border>
 
@@ -121,6 +162,74 @@
 				</StackPanel>
 			</Grid>
 
+			<!-- PAVOUK nad celým detailem (pokud stále potřebné) -->
+			<TextBlock Text="Pavouk turnaje" FontWeight="Bold" Margin="0,15,0,5"/>
+
+			<ScrollViewer HorizontalScrollBarVisibility="Auto"
+						  VerticalScrollBarVisibility="Auto"
+						  Height="300">
+
+				<Grid>
+					<!-- Spojnice (overlay) -->
+					<Canvas IsHitTestVisible="False" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
+						<!-- jednoduché demo spojnice -->
+						<Line StartPoint="140,40" EndPoint="200,80"
+							  Stroke="Gray" StrokeThickness="1"/>
+						<Line StartPoint="140,120" EndPoint="200,80"
+							  Stroke="Gray" StrokeThickness="1"/>
+					</Canvas>
+
+					<!-- Pavouk -->
+					<ItemsControl ItemsSource="{Binding TournamentViewModel.SelectedTournament.Rounds}">
+
+						<ItemsControl.ItemsPanel>
+							<ItemsPanelTemplate>
+								<StackPanel Orientation="Horizontal" Spacing="40"/>
+							</ItemsPanelTemplate>
+						</ItemsControl.ItemsPanel>
+
+						<ItemsControl.ItemTemplate>
+							<DataTemplate>
+								<StackPanel Spacing="10">
+									<TextBlock Text="{Binding Name}"
+											   FontWeight="Bold"
+											   HorizontalAlignment="Center"/>
+									<ItemsControl ItemsSource="{Binding Matches}">
+										<ItemsControl.ItemTemplate>
+											<DataTemplate>
+												<Border Background="#E8E8E8"
+														Padding="8"
+														CornerRadius="6"
+														Width="140">
+
+													<StackPanel Spacing="3">
+
+														<TextBlock Text="{Binding Participant1.Team.Name, TargetNullValue='---'}"
+																   HorizontalAlignment="Center"/>
+
+														<TextBlock Text="vs"
+																   FontSize="10"
+																   HorizontalAlignment="Center"
+																   Foreground="Gray"/>
+
+														<TextBlock Text="{Binding Participant2.Team.Name, TargetNullValue='---'}"
+																   HorizontalAlignment="Center"/>
+
+													</StackPanel>
+
+												</Border>
+											</DataTemplate>
+										</ItemsControl.ItemTemplate>
+									</ItemsControl>
+
+								</StackPanel>
+							</DataTemplate>
+						</ItemsControl.ItemTemplate>
+
+					</ItemsControl>
+				</Grid>
+			</ScrollViewer>
+
 			<Grid Name="PlayersView" IsVisible="{Binding IsPlayersVisible}" ColumnDefinitions="300, *">
 				<Border Grid.Column="0" Background="#F5F5F5" Padding="12" Margin="0,0,12,0" CornerRadius="4">
 					<StackPanel Spacing="8">
@@ -137,6 +246,47 @@
 							</ListBox.ItemTemplate>
 						</ListBox>
 						<Button Content="Smazat Hráče" Command="{Binding PlayerViewModel.DeletePlayerCommand}" CommandParameter="{Binding PlayerViewModel.SelectedPlayer}" Background="#DC3545" Foreground="White" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" Padding="8"/>
+
+						<!-- Pavouk pod formulářem Nový Hráč -->
+						<TextBlock Text="Pavouk" FontWeight="Bold" Margin="0,12,0,6"/>
+						<ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto" Height="200">
+							<Grid Name="Pavouk_Players">
+								<Canvas IsHitTestVisible="False" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
+									<Line StartPoint="20,20" EndPoint="140,60" Stroke="Gray" StrokeThickness="1"/>
+									<Line StartPoint="20,80" EndPoint="140,60" Stroke="Gray" StrokeThickness="1"/>
+								</Canvas>
+
+								<!-- Demo: zobrazení stejné šablony pavouku (můžeš přebindovat) -->
+								<ItemsControl ItemsSource="{Binding TournamentViewModel.SelectedTournament.Rounds}">
+									<ItemsControl.ItemsPanel>
+										<ItemsPanelTemplate>
+											<StackPanel Orientation="Horizontal" Spacing="12"/>
+										</ItemsPanelTemplate>
+									</ItemsControl.ItemsPanel>
+
+									<ItemsControl.ItemTemplate>
+										<DataTemplate>
+											<StackPanel Spacing="8">
+												<TextBlock Text="{Binding Name}" FontWeight="Bold" HorizontalAlignment="Center"/>
+												<ItemsControl ItemsSource="{Binding Matches}">
+													<ItemsControl.ItemTemplate>
+														<DataTemplate>
+															<Border Background="#E8E8E8" Padding="6" CornerRadius="6" Width="120">
+																<StackPanel>
+																	<TextBlock Text="{Binding Participant1.Team.Name, TargetNullValue='---'}" HorizontalAlignment="Center"/>
+																	<TextBlock Text="vs" FontSize="10" HorizontalAlignment="Center" Foreground="Gray"/>
+																	<TextBlock Text="{Binding Participant2.Team.Name, TargetNullValue='---'}" HorizontalAlignment="Center"/>
+																</StackPanel>
+															</Border>
+														</DataTemplate>
+													</ItemsControl.ItemTemplate>
+												</ItemsControl>
+											</StackPanel>
+										</DataTemplate>
+									</ItemsControl.ItemTemplate>
+								</ItemsControl>
+							</Grid>
+						</ScrollViewer>
 					</StackPanel>
 				</Border>
 
@@ -182,6 +332,46 @@
 							</ListBox.ItemTemplate>
 						</ListBox>
 						<Button Content="Smazat Tým" Command="{Binding PlayerViewModel.DeleteTeamCommand}" CommandParameter="{Binding PlayerViewModel.SelectedTeam}" Background="#DC3545" Foreground="White" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" Padding="8"/>
+
+						<!-- Pavouk pod formulářem Nový Tým -->
+						<TextBlock Text="Pavouk" FontWeight="Bold" Margin="0,12,0,6"/>
+						<ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto" Height="200">
+							<Grid Name="Pavouk_Teams">
+								<Canvas IsHitTestVisible="False" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
+									<Line StartPoint="20,20" EndPoint="140,60" Stroke="Gray" StrokeThickness="1"/>
+									<Line StartPoint="20,80" EndPoint="140,60" Stroke="Gray" StrokeThickness="1"/>
+								</Canvas>
+
+								<ItemsControl ItemsSource="{Binding TournamentViewModel.SelectedTournament.Rounds}">
+									<ItemsControl.ItemsPanel>
+										<ItemsPanelTemplate>
+											<StackPanel Orientation="Horizontal" Spacing="12"/>
+										</ItemsPanelTemplate>
+									</ItemsControl.ItemsPanel>
+
+									<ItemsControl.ItemTemplate>
+										<DataTemplate>
+											<StackPanel Spacing="8">
+												<TextBlock Text="{Binding Name}" FontWeight="Bold" HorizontalAlignment="Center"/>
+												<ItemsControl ItemsSource="{Binding Matches}">
+													<ItemsControl.ItemTemplate>
+														<DataTemplate>
+															<Border Background="#E8E8E8" Padding="6" CornerRadius="6" Width="120">
+																<StackPanel>
+																	<TextBlock Text="{Binding Participant1.Team.Name, TargetNullValue='---'}" HorizontalAlignment="Center"/>
+																	<TextBlock Text="vs" FontSize="10" HorizontalAlignment="Center" Foreground="Gray"/>
+																	<TextBlock Text="{Binding Participant2.Team.Name, TargetNullValue='---'}" HorizontalAlignment="Center"/>
+																</StackPanel>
+															</Border>
+														</DataTemplate>
+													</ItemsControl.ItemTemplate>
+												</ItemsControl>
+											</StackPanel>
+										</DataTemplate>
+									</ItemsControl.ItemTemplate>
+								</ItemsControl>
+							</Grid>
+						</ScrollViewer>
 					</StackPanel>
 				</Border>
 
