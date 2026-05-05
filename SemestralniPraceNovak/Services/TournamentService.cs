@@ -63,7 +63,7 @@ namespace SemestralniPraceNovak.Services
             return true;
         }
 
-        
+
         public async Task<TournamentParticipant> AddPlayerToTournamentAsync(int tournamentId, int playerId)
         {
             var participant = new TournamentParticipant { TournamentId = tournamentId, PlayerId = playerId };
@@ -90,7 +90,7 @@ namespace SemestralniPraceNovak.Services
             return true;
         }
 
-        
+
         public async Task<Round> CreateRoundAsync(int tournamentId, int roundNumber, string name)
         {
             var round = new Round { TournamentId = tournamentId, RoundNumber = roundNumber, Name = name };
@@ -109,7 +109,7 @@ namespace SemestralniPraceNovak.Services
             return true;
         }
 
-        
+
         public async Task<List<TournamentParticipant>> GetTournamentStandingsAsync(int tournamentId)
         {
             return await _context.TournamentParticipants

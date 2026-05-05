@@ -1,4 +1,4 @@
-using CommunityToolkit.Mvvm.ComponentModel;
+﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.EntityFrameworkCore;
 using SemestralniPraceNovak.Database;
@@ -16,7 +16,7 @@ namespace SemestralniPraceNovak.ViewModels
         private readonly TournamentService _tournamentService;
         private readonly SportService _sportService;
         private readonly MatchService _matchService;
-        private readonly PlayerService _playerService; 
+        private readonly PlayerService _playerService;
 
         [ObservableProperty]
         private ObservableCollection<Tournament> tournaments;
@@ -45,13 +45,11 @@ namespace SemestralniPraceNovak.ViewModels
         [ObservableProperty]
         private Round selectedRound;
 
-        
         [ObservableProperty]
         private ObservableCollection<Team> availableTeams;
 
         [ObservableProperty]
         private Team selectedAvailableTeam;
-        
 
         public TournamentViewModel()
         {
@@ -59,16 +57,23 @@ namespace SemestralniPraceNovak.ViewModels
             _tournamentService = new TournamentService(context);
             _sportService = new SportService(context);
             _matchService = new MatchService(context);
-            _playerService = new PlayerService(context); 
+            _playerService = new PlayerService(context);
 
             Tournaments = new ObservableCollection<Tournament>();
             Sports = new ObservableCollection<Sport>();
             Rounds = new ObservableCollection<Round>();
             Standings = new ObservableCollection<TournamentParticipant>();
             Matches = new ObservableCollection<Match>();
-            AvailableTeams = new ObservableCollection<Team>(); 
+            AvailableTeams = new ObservableCollection<Team>();
 
             _ = LoadAsync();
+        }
+        partial void OnSelectedTournamentChanged(Tournament value)
+        {
+            if (value != null)
+            {
+                _ = SelectTournamentAsync(value);
+            }
         }
 
         [RelayCommand]
@@ -77,32 +82,23 @@ namespace SemestralniPraceNovak.ViewModels
             try
             {
                 IsLoading = true;
+                ErrorMessage = string.Empty;
 
-                var tournaments = await _tournamentService.GetAllTournamentsAsync();
+                var loadedTournaments = await _tournamentService.GetAllTournamentsAsync();
                 Tournaments.Clear();
-                foreach (var tournament in tournaments)
-                {
-                    Tournaments.Add(tournament);
-                }
+                foreach (var t in loadedTournaments) Tournaments.Add(t);
 
-                var sports = await _sportService.GetAllSportsAsync();
+                var loadedSports = await _sportService.GetAllSportsAsync();
                 Sports.Clear();
-                foreach (var sport in sports)
-                {
-                    Sports.Add(sport);
-                }
+                foreach (var s in loadedSports) Sports.Add(s);
 
-                
                 var teams = await _playerService.GetAllTeamsAsync();
                 AvailableTeams.Clear();
-                foreach (var team in teams)
-                {
-                    AvailableTeams.Add(team);
-                }
+                foreach (var team in teams) AvailableTeams.Add(team);
             }
             catch (Exception ex)
             {
-                ErrorMessage = $"Chyba p�i na��t�n�: {ex.Message}";
+                ErrorMessage = $"Chyba pøi naèítání: {ex.Message}";
             }
             finally
             {
@@ -110,52 +106,70 @@ namespace SemestralniPraceNovak.ViewModels
             }
         }
 
-        
         [RelayCommand]
         public async Task AddTeamToParticipantAsync()
         {
             if (SelectedTournament == null || SelectedAvailableTeam == null)
             {
-                ErrorMessage = "Vyberte turnaj a t�m k p�id�n�.";
+                ErrorMessage = "Vyberte turnaj a tým k přidání.";
                 return;
             }
 
             try
             {
-                
+                ErrorMessage = string.Empty;
+                var existingParticipants = await _tournamentService.GetTournamentStandingsAsync(SelectedTournament.Id);
+                if (existingParticipants.Any(p => p.TeamId == SelectedAvailableTeam.Id))
+                {
+                    ErrorMessage = $"Tým '{SelectedAvailableTeam.Name}' už v tomto turnaji je!";
+                    return;
+                }
                 await _tournamentService.AddTeamParticipantAsync(SelectedTournament.Id, SelectedAvailableTeam.Id);
-
-                
                 await SelectTournamentAsync(SelectedTournament);
-
-                SelectedAvailableTeam = null; 
+                SelectedAvailableTeam = null;
+            }
+            catch (DbUpdateException ex)
+            {
+                var realError = ex.InnerException != null ? ex.InnerException.Message : ex.Message;
+                ErrorMessage = $"DB Chyba při přidávání týmu: {realError}";
             }
             catch (Exception ex)
             {
-                ErrorMessage = $"Chyba p�i p�id�v�n� t�mu: {ex.Message}";
+                ErrorMessage = $"Chyba při přidávání týmu: {ex.Message}";
             }
         }
-        
 
         [RelayCommand]
         public async Task CreateTournamentAsync()
         {
             if (string.IsNullOrWhiteSpace(NewTournamentName) || SelectedSport == null)
             {
-                ErrorMessage = "Vypl�te pros�m v�echna pole";
+                ErrorMessage = "Vyplòte prosím všechna pole";
                 return;
             }
 
             try
             {
+                ErrorMessage = string.Empty;
                 var tournament = await _tournamentService.CreateTournamentAsync(NewTournamentName, SelectedSport.Id);
                 Tournaments.Add(tournament);
                 NewTournamentName = string.Empty;
                 SelectedSport = null;
             }
+            catch (DbUpdateException ex)
+            {
+                var realError = ex.InnerException != null ? ex.InnerException.Message : ex.Message;
+
+                System.Diagnostics.Debug.WriteLine("\n!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+                System.Diagnostics.Debug.WriteLine("SKUTEČNÁ CHYBA DATABÁZE:");
+                System.Diagnostics.Debug.WriteLine(realError);
+                System.Diagnostics.Debug.WriteLine("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n");
+
+                ErrorMessage = $"DB Chyba: {realError}";
+            }
             catch (Exception ex)
             {
-                ErrorMessage = $"Chyba p�i vytv��en� turnaje: {ex.Message}";
+                ErrorMessage = $"Chyba pøi vytváøení turnaje: {ex.Message}";
             }
         }
 
@@ -167,20 +181,20 @@ namespace SemestralniPraceNovak.ViewModels
             try
             {
                 IsLoading = true;
-                SelectedTournament = await _tournamentService.GetTournamentByIdAsync(tournament.Id);
+                var freshTournament = await _tournamentService.GetTournamentByIdAsync(tournament.Id);
+                if (freshTournament == null) return;
 
                 Rounds.Clear();
-                foreach (var round in SelectedTournament.Rounds)
+                if (freshTournament.Rounds != null)
                 {
-                    Rounds.Add(round);
+                    foreach (var round in freshTournament.Rounds)
+                        Rounds.Add(round);
                 }
 
-                var standings = await _tournamentService.GetTournamentStandingsAsync(tournament.Id);
+                var standingsData = await _tournamentService.GetTournamentStandingsAsync(tournament.Id);
                 Standings.Clear();
-                foreach (var standing in standings)
-                {
+                foreach (var standing in standingsData)
                     Standings.Add(standing);
-                }
             }
             catch (Exception ex)
             {
@@ -200,9 +214,14 @@ namespace SemestralniPraceNovak.ViewModels
                 await _tournamentService.DeleteTournamentAsync(tournament.Id);
                 Tournaments.Remove(tournament);
             }
+            catch (DbUpdateException ex)
+            {
+                var realError = ex.InnerException != null ? ex.InnerException.Message : ex.Message;
+                ErrorMessage = $"DB Chyba pøi mazání: {realError}";
+            }
             catch (Exception ex)
             {
-                ErrorMessage = $"Chyba p�i maz�n�: {ex.Message}";
+                ErrorMessage = $"Chyba pøi mazání: {ex.Message}";
             }
         }
 
@@ -217,13 +236,24 @@ namespace SemestralniPraceNovak.ViewModels
 
             try
             {
-                var roundNumber = SelectedTournament.Rounds.Count + 1;
+                var roundNumber = (SelectedTournament.Rounds?.Count ?? 0) + 1;
                 var round = await _tournamentService.CreateRoundAsync(
                     SelectedTournament.Id,
                     roundNumber,
                     $"Kolo {roundNumber}"
                 );
                 Rounds.Add(round);
+            }
+            catch (DbUpdateException ex)
+            {
+                var realError = ex.InnerException != null ? ex.InnerException.Message : ex.Message;
+
+                System.Diagnostics.Debug.WriteLine("\n!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+                System.Diagnostics.Debug.WriteLine("SKUTEČNÁ CHYBA DATABÁZE:");
+                System.Diagnostics.Debug.WriteLine(realError);
+                System.Diagnostics.Debug.WriteLine("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n");
+
+                ErrorMessage = $"DB Chyba: {realError}";
             }
             catch (Exception ex)
             {
@@ -237,51 +267,85 @@ namespace SemestralniPraceNovak.ViewModels
             try
             {
                 SelectedRound = round;
-                var matches = await _matchService.GetRoundMatchesAsync(round.Id);
+                var loadedMatches = await _matchService.GetRoundMatchesAsync(round.Id);
                 Matches.Clear();
-                foreach (var match in matches)
-                {
-                    Matches.Add(match);
-                }
+                foreach (var match in loadedMatches) Matches.Add(match);
             }
             catch (Exception ex)
             {
                 ErrorMessage = $"Chyba: {ex.Message}";
             }
         }
+
         [RelayCommand]
-        public async Task DrawMatchesAsync(Round round) 
+        public async Task DrawMatchesAsync(Round round)
         {
-            
             var targetRound = round ?? SelectedRound;
 
             if (targetRound == null)
             {
-                ErrorMessage = "Vyberte kolo pro losov�n�.";
+                ErrorMessage = "Vyberte kolo pro losování.";
                 return;
             }
 
             try
             {
                 IsLoading = true;
-                SelectedRound = targetRound; 
+                SelectedRound = targetRound;
 
-              
-                if (SelectedTournament.Participants.Any(p => p.PlayerId.HasValue))
-                {
+                if (SelectedTournament.Participants != null && SelectedTournament.Participants.Any(p => p.PlayerId.HasValue))
                     await _matchService.DrawPlayersMatchesAsync(targetRound.Id);
-                }
                 else
-                {
                     await _matchService.DrawTeamsMatchesAsync(targetRound.Id);
-                }
 
-          
                 await LoadRoundMatchesAsync(targetRound);
+            }
+            catch (DbUpdateException ex)
+            {
+                var realError = ex.InnerException != null ? ex.InnerException.Message : ex.Message;
+
+                System.Diagnostics.Debug.WriteLine("\n!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+                System.Diagnostics.Debug.WriteLine("SKUTEČNÁ CHYBA DATABÁZE:");
+                System.Diagnostics.Debug.WriteLine(realError);
+                System.Diagnostics.Debug.WriteLine("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n");
+
+                ErrorMessage = $"DB Chyba: {realError}";
             }
             catch (Exception ex)
             {
-                ErrorMessage = $"Chyba p�i losov�n�: {ex.Message}";
+                ErrorMessage = $"Chyba pøi losování: {ex.Message}";
+            }
+            finally
+            {
+                IsLoading = false;
+            }
+        }
+        [RelayCommand]
+        public async Task SaveMatchScoreAsync(Match match)
+        {
+            if (match == null) return;
+            if (!match.Score1.HasValue || !match.Score2.HasValue)
+            {
+                ErrorMessage = "Před uložením prosím zadejte platné skóre pro oba týmy.";
+                return;
+            }
+
+            try
+            {
+                IsLoading = true;
+                ErrorMessage = string.Empty;
+                await _matchService.SetMatchResultAsync(match.Id, match.Score1.Value, match.Score2.Value);
+                await SelectTournamentAsync(SelectedTournament);
+
+            }
+            catch (DbUpdateException ex)
+            {
+                var realError = ex.InnerException != null ? ex.InnerException.Message : ex.Message;
+                ErrorMessage = $"DB Chyba při ukládání skóre: {realError}";
+            }
+            catch (Exception ex)
+            {
+                ErrorMessage = $"Chyba při ukládání skóre: {ex.Message}";
             }
             finally
             {
@@ -289,4 +353,4 @@ namespace SemestralniPraceNovak.ViewModels
             }
         }
     }
-}
+ }

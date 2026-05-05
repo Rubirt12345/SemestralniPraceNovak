@@ -9,7 +9,6 @@ namespace SemestralniPraceNovak.Models
         public Tournament Tournament { get; set; }
         public int RoundNumber { get; set; }
         public string Name { get; set; }
-
-        public ICollection<Match> Matches { get; set; } = new List<Match>();
+        public IList<Match> Matches { get; set; } = new List<Match>();
     }
 }

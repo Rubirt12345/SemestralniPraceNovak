@@ -95,7 +95,6 @@ namespace SemestralniPraceNovak.Database
                 .HasForeignKey(m => m.Team2Id)
                 .OnDelete(DeleteBehavior.SetNull);
 
-            
             modelBuilder.Entity<TournamentParticipant>()
                 .HasOne(tp => tp.Tournament)
                 .WithMany(t => t.Participants)

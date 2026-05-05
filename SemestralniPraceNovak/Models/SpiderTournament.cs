@@ -11,26 +11,18 @@ namespace SemestralniPraceNovak.Models
         public Tournament Tournament { get; set; }
         public DateTime CreatedAt { get; set; } = DateTime.Now;
         public SpiderTournamentStatus Status { get; set; } = SpiderTournamentStatus.Preparation;
-        
-       
         public int NumberOfRounds { get; set; }
-        
-    
         public int NumberOfParticipants { get; set; }
-
         public ICollection<SpiderRound> Rounds { get; set; } = new List<SpiderRound>();
         public ICollection<SpiderMatch> Matches { get; set; } = new List<SpiderMatch>();
         public ICollection<SpiderParticipant> Participants { get; set; } = new List<SpiderParticipant>();
     }
-
     public enum SpiderTournamentStatus
     {
         Preparation,    
         InProgress,     
         Completed       
     }
-
-    
     public class SpiderRound
     {
         public int Id { get; set; }
@@ -42,8 +34,6 @@ namespace SemestralniPraceNovak.Models
 
         public ICollection<SpiderMatch> Matches { get; set; } = new List<SpiderMatch>();
     }
-
-
     public class SpiderMatch
     {
         public int Id { get; set; }
@@ -76,8 +66,6 @@ namespace SemestralniPraceNovak.Models
        
         public int OrderInRound { get; set; }
     }
-
-
     public class SpiderParticipant
     {
         public int Id { get; set; }
